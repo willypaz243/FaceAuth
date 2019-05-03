@@ -21,8 +21,11 @@ Primero agregue una foto suya donde solo se vea su rostro en la carpeta images/
 luego puede abrir una terminal python e importar la funcion camara()de esta forma:
 
 >>> from camara import camara
+
 >>> camara() # con esto ya funcionaria la camara utilizara la primera camara conectada a su pc o la webcam 
 
 Esto podria tardar unos minutos debido a que debe cargar los datos del modelo.
 o tambien puede crear un archivo python3 y escribir el mismo codigo de la terminal.
+
+Para cerrar la ventada de la camara presione 'ESC'
 
