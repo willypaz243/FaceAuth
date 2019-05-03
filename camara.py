@@ -22,7 +22,7 @@ CAP = cv2.VideoCapture()
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 print(face_cascade.empty(), "Pesos cargados")
 
-def camara():
+def camara(ip = None):
     """
     Implementacion de una camara web para identificar 
     personas con sus rostros.
@@ -31,12 +31,14 @@ def camara():
     Reemplace el IP de muestra con el IP de su camara.
 
     """
-    active = CAP.open(0) and not face_cascade.empty()
-    #active = CAP.open('http://192.168.0.0:8000/video') and not face_cascade.empty()
+    if ip == None:
+        active = CAP.open(0) and not face_cascade.empty()
+    else:
+        active = CAP.open(ip+'/video') and not face_cascade.empty()
     while active:
         ret, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.equalizeHist(gray)
+        #gray = cv2.equalizeHist(gray)
 
         # Detecta los limites de un rostro y los almacena en una lista
         faces = face_cascade.detectMultiScale(gray, 1.2, 3)
