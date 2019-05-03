@@ -38,18 +38,17 @@ def camara(ip = None):
     while active:
         ret, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #gray = cv2.equalizeHist(gray)
 
         # Detecta los limites de un rostro y los almacena en una lista
-        faces = face_cascade.detectMultiScale(gray, 1.2, 3)
+        faces = face_cascade.detectMultiScale(gray, 2, 3)
         for (x, y, w, h) in faces:
             # Fijando dimenciones
             x1 = x
-            y1 = y
+            y1 = y+5
             x2 = x+w
-            y2 = y+h
+            y2 = y+h-5
             tam_y = y2-y1
-            tam_y = (tam_y//100)*20
+            tam_y = (tam_y//100)*10
             y2 += tam_y
             # Extrae el fracmento de la imagen original que posee el rostro
             parte = frame[y1:y2, x1:x2]
