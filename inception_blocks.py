@@ -5,7 +5,7 @@ import keras
 
 def inception_block_1a(hidden_layer):
     """
-    Implementation of an inception block
+    Implementacion de la incepción de bloques
     """
     # 3x3========================================================
     layer_3x3 = keras.layers.Conv2D(96, (1, 1), data_format='channels_first', name ='inception_3a_3x3_conv1')(hidden_layer)
@@ -38,7 +38,7 @@ def inception_block_1a(hidden_layer):
     layer_1x1 = keras.layers.Activation('relu')(layer_1x1)
     # ===========================================================
     
-    # CONCAT
+    # Concatenando los bloques
     inception = keras.layers.concatenate([layer_3x3, layer_5x5, layer_pool, layer_1x1], axis=1)
 
     return inception
@@ -80,6 +80,7 @@ def inception_block_1b(hidden_layer):
     return inception
 
 def inception_block_1c(hidden_layer):
+    # Utilizando una funcion de utils.conv2d_bn
     layer_3x3 = conv2d_bn(
         layer=hidden_layer,
         layer_name='inception_3c_3x3',

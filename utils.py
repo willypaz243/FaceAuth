@@ -5,7 +5,8 @@ import os
 import cv2
 import glob
 
-
+# contiene un arreglo con todos los nombres de las capas
+# creadas en el modelo y de inception_blocks
 WEIGHTS = [
   'conv1', 'bn1', 'conv2', 'bn2', 'conv3', 'bn3',
   'inception_3a_1x1_conv', 'inception_3a_1x1_bn',
@@ -33,7 +34,7 @@ WEIGHTS = [
   'dense_layer'
 ]
 
-
+# Un diccionario de las dimenciones de salida (outputs) de cada capa (layer)
 conv_shape = {
   'conv1': [64, 3, 7, 7],
   'conv2': [64, 64, 1, 1],
@@ -88,6 +89,14 @@ def conv2d_bn(
         cv2_strides=(1, 1),
         padding=None
     ):
+    """
+    Crea un tensor de capas,
+        layer, la capa inicial
+        layer_name, nombre de la capa
+        cv1_out, cv2_out, numero de filtros de salida
+        cv1_filter, cv2_filter, tamaño del kernel
+        cv1_strides, cv2_strides, strides
+    """
     num = '' if cv2_out == None else '1'
 
     tensor = keras.layers.Conv2D(cv1_out, cv1_filter, strides=cv1_strides, data_format='channels_first', name=layer_name+'_conv'+num)(layer)
@@ -108,11 +117,14 @@ def conv2d_bn(
 
 
 def load_weights_from_FaceNet(model):
-    # Load weights from csv files (which was exported from Openface torch model)
+    """
+    Cargar pesos desde archivos csv 
+    (que se exportaron desde el modelo de antorcha Openface)
+    """
     weights = WEIGHTS
     weights_dict = load_weights()
 
-    # Set layer weights of the model
+    # Establecer los pesos de capa del modelo.
     for name in weights:
         if model.get_layer(name) != None:
             model.get_layer(name).set_weights(weights_dict[name])
@@ -120,7 +132,7 @@ def load_weights_from_FaceNet(model):
             model.get_layer(name).set_weights(weights_dict[name])
 
 def load_weights():
-    # Set weights path
+    # Establecer la ruta de los pesos
     dirPath = './weights'
     fileNames = filter(lambda f: not f.startswith('.'), os.listdir(dirPath))
     paths = {}
@@ -153,22 +165,42 @@ def load_weights():
 
 
 def load_database(model):
+    """
+    Crea un dicionario con los nombres de las imagenes almacenadas
+    como llaves y un codigo proporcionado por el modelo como el dato
+    """
     database = {}
     for archivo in glob.glob("images/*"):
         nombre = os.path.splitext(os.path.basename(archivo))[0]
         img = cv2.imread(archivo, 1)
+        # Se procede a generar el codigo de la imagen
         database[nombre] = get_img_code(img, model)
     return database
 
 def get_img_code(img, model):
+    """
+    Genera un codigo a una imagen:
+        img, la imagen cargada como una matris.
+        model, el modelo que generara su codigo.
+    """
+    # Redimenciona a imagen
     img = cv2.resize(img, (96, 96))
+    # Cambia el formato de color de BGR a RGB
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # Escala los valores de la imagen en un rango de 0 a 1
     img = np.around(np.transpose(img, (2,0,1))/255.0, decimals=12)
+    # Agregamos la imagen a un array como dato de prediccion
     x_train = np.array([img])
+    # Devuelve la prediccion hecha por el modelo
     return model.predict_on_batch(x_train)
 
 def get_most_similar(img_input, database):
-
+    """
+    Devuelve el nombre de la imagen mas parecida de la base de datos
+    a la imagen de entrada,
+        img_input, imagen de entrada.
+        database, un diccionario de imagenes 
+    """
     dist_min = 99999.0
     identidad = None
     for name, img_code in database.items():
@@ -176,5 +208,6 @@ def get_most_similar(img_input, database):
         if dist < dist_min:
             dist_min = dist
             identidad = name
-    
+    # Devuelve en nombre de la imagen con menor diferencia 
+    # a la imagen de entradas
     return str(identidad)
