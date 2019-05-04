@@ -1,26 +1,32 @@
 import cv2
+import keras
 from id_model import faceRecoModel
 from triplet_loss import triplet_loss
 from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar
 
 # Creamos un nuevo modelo
-model = faceRecoModel(input_shape=(3, 96, 96))
-# Creamos una base de datos con la imagenes del directorio 'images/'
-database = load_database(model)
+model = keras.models.load_model('my_model.h5')
+#model = faceRecoModel(input_shape=(3, 96, 96))
 # Fuente del texto para la imagen
 font = cv2.FONT_HERSHEY_SIMPLEX
+
+
 
 # Copila en modelo
 model.compile(optimizer = 'adam', loss = triplet_loss, metrics = ['accuracy'])
 print('Cargando pesos predefinidos....')
 # Carga los pesos de las capas
-load_weights_from_FaceNet(model)
+#load_weights_from_FaceNet(model)
+# Creamos una base de datos con la imagenes del directorio 'images/'
+print('Creando Base de Datos....')
+database = load_database(model)
 
 # Abrimos una captura de opencv
 CAP = cv2.VideoCapture()
 # Cargamos Clasificador en cascada que reconocera rostros humanos.
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-print(face_cascade.empty(), "Pesos cargados")
+
+print('LISTO!!')
 
 def camara(ip = None):
     """
@@ -40,15 +46,15 @@ def camara(ip = None):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detecta los limites de un rostro y los almacena en una lista
-        faces = face_cascade.detectMultiScale(gray, 2, 3)
+        faces = face_cascade.detectMultiScale(gray, 1.2, 3)
         for (x, y, w, h) in faces:
             # Fijando dimenciones
             x1 = x
-            y1 = y+5
+            y1 = y
             x2 = x+w
-            y2 = y+h-5
+            y2 = y+h
             tam_y = y2-y1
-            tam_y = (tam_y//100)*10
+            tam_y = (tam_y//100)*20
             y2 += tam_y
             # Extrae el fracmento de la imagen original que posee el rostro
             parte = frame[y1:y2, x1:x2]
