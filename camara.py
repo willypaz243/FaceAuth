@@ -1,4 +1,4 @@
-import cv2
+import cv2 as cv2
 import keras
 from id_model import faceRecoModel
 from triplet_loss import triplet_loss
@@ -42,7 +42,7 @@ def camara(ip = None):
     else:
         active = CAP.open(ip+'/video') and not face_cascade.empty()
     while active:
-        ret, frame = CAP.read()
+        _, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detecta los limites de un rostro y los almacena en una lista
@@ -64,6 +64,7 @@ def camara(ip = None):
             frame = cv2.putText(frame, identidad, (x1,y1+20), font, 1,(0,0,255),2,cv2.LINE_AA)
             # Enmarca el rostro del usuario identificado
             frame = cv2.rectangle(frame,(x1, y1),(x2, y2),(255,0,0),2)
+        frame = 255-frame
         cv2.imshow('Camara', frame)
         key = cv2.waitKey(1)
         if key == 27: # Preciona Esc para Salir

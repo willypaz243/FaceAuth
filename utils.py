@@ -2,7 +2,7 @@ import keras
 from numpy import genfromtxt
 import numpy as np
 import os
-import cv2
+import cv2 as cv2
 import glob
 
 # contiene un arreglo con todos los nombres de las capas
@@ -185,8 +185,13 @@ def get_img_code(img, model):
     """
     # Redimenciona a imagen
     img = cv2.resize(img, (96, 96))
+    img[:,:,0] = cv2.equalizeHist(img[:,:,0])
+    img[:,:,1] = cv2.equalizeHist(img[:,:,1])
+    img[:,:,2] = cv2.equalizeHist(img[:,:,2])
     # Cambia el formato de color de BGR a RGB
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #img = cv2.GaussianBlur(img,(3,3),1)
+    img = 255 - img
     # Escala los valores de la imagen en un rango de 0 a 1
     img = np.around(np.transpose(img, (2,0,1))/255.0, decimals=12)
     # Agregamos la imagen a un array como dato de prediccion
