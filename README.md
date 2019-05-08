@@ -21,8 +21,9 @@ Se a agregado la funcion register_camera()
 Abra una terminal e ingrese al interprete de python3
 
 >>> from camara import *
->>> register_camera('su nombre', ip=None) # si tiene un camara inalambrica donde ip, por ejemplo "http://127.0.0.1:6000"
->>> # Abrira una ventana mostrando la imagen de su camara, pulsa "ESC" para cerrar y registrar su foto.
+
+>>> register_camera('su nombre', ip=None)  # si tiene un camara inalambrica donde ip, por ejemplo "http://127.0.0.1:6000"
+>>>  #Abrira una ventana mostrando la imagen de su camara, pulsa "ESC" para cerrar y registrar su foto.
 >>> camara() # ejecute la camara igualmente sí tiene una camara inalambrica ingrese el ip como parametro.
 
 Esto podria tardar unos minutos debido a que debe cargar los datos del modelo.
