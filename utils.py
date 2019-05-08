@@ -5,6 +5,7 @@ import os
 import cv2 as cv2
 import glob
 
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 # contiene un arreglo con todos los nombres de las capas
 # creadas en el modelo y de inception_blocks
 WEIGHTS = [
@@ -185,6 +186,7 @@ def get_img_code(img, model):
     """
     # Redimenciona a imagen
     img = cv2.resize(img, (96, 96))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img[:,:,0] = cv2.equalizeHist(img[:,:,0])
     img[:,:,1] = cv2.equalizeHist(img[:,:,1])
     img[:,:,2] = cv2.equalizeHist(img[:,:,2])
@@ -206,7 +208,7 @@ def get_most_similar(img_input, database):
         img_input, imagen de entrada.
         database, un diccionario de imagenes 
     """
-    dist_min = 99999.0
+    dist_min = 1.0
     identidad = None
     for name, img_code in database.items():
         dist = np.linalg.norm(img_code - img_input)
@@ -215,4 +217,32 @@ def get_most_similar(img_input, database):
             identidad = name
     # Devuelve en nombre de la imagen con menor diferencia 
     # a la imagen de entradas
-    return str(identidad)
+    return str(identidad), str(dist)
+
+def get_face(frame):
+    """
+    Obtiene cuadros de una imagen en la que se encuentren rostros
+    Tambien se obtiene cuatro valores que marca los limites del cuadro
+        freme, la imagen de la que se obtendra los rostros
+    """
+    # Detecta los limites de un rostro y los almacena en una lista
+    faces = face_cascade.detectMultiScale(frame, 1.1, 5)
+    partes = []
+    x1 = 0
+    x2 = 0
+    y1 = 0
+    y2 = 0
+    for (x, y, w, h) in faces:
+        # Fijando dimenciones
+        x1 = x
+        y1 = y
+        x2 = x+w
+        y2 = y+h
+
+        y2 = y2 + (y2/100)*18
+        y2 = int(y2)
+
+        # Extrae el fracmento de la imagen original que posee el rostro
+        parte = frame[y1:y2, x1:x2]
+        partes.append(parte)
+    return partes, x1, x2, y1, y2

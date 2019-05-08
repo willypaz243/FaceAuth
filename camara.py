@@ -1,22 +1,23 @@
 import cv2 as cv2
 import keras
+import numpy as np
 from id_model import faceRecoModel
 from triplet_loss import triplet_loss
-from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar
+from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar, get_face
 
 # Creamos un nuevo modelo
+# model = faceRecoModel(input_shape=(3, 96, 96))
+print('Cargando pesos predefinidos....')
+# En este caso estamos cargando el modelo
 model = keras.models.load_model('my_model.h5')
-#model = faceRecoModel(input_shape=(3, 96, 96))
 # Fuente del texto para la imagen
 font = cv2.FONT_HERSHEY_SIMPLEX
-
-
-
 # Copila en modelo
 model.compile(optimizer = 'adam', loss = triplet_loss, metrics = ['accuracy'])
-print('Cargando pesos predefinidos....')
+
 # Carga los pesos de las capas
 #load_weights_from_FaceNet(model)
+
 # Creamos una base de datos con la imagenes del directorio 'images/'
 print('Creando Base de Datos....')
 database = load_database(model)
@@ -38,33 +39,19 @@ def camara(ip = None):
 
     """
     if ip == None:
-        active = CAP.open(0) and not face_cascade.empty()
+        active = CAP.open(0)
     else:
-        active = CAP.open(ip+'/video') and not face_cascade.empty()
+        active = CAP.open(ip+'/video')
     while active:
         _, frame = CAP.read()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        # Detecta los limites de un rostro y los almacena en una lista
-        faces = face_cascade.detectMultiScale(gray, 1.2, 3)
-        for (x, y, w, h) in faces:
-            # Fijando dimenciones
-            x1 = x
-            y1 = y
-            x2 = x+w
-            y2 = y+h
-            tam_y = y2-y1
-            tam_y = (tam_y//100)*20
-            y2 += tam_y
-            # Extrae el fracmento de la imagen original que posee el rostro
-            parte = frame[y1:y2, x1:x2]
+        partes, x1, x2, y1, y2 = get_face(frame)
+        for parte in partes:
             # Identifica a la persona y estrae su nombre de la foto
-            identidad = get_most_similar(get_img_code(parte, model), database)
-            # Agraga un texto con el nombre del identificado al la imagen
+            identidad, dist = get_most_similar(get_img_code(parte, model), database)
             frame = cv2.putText(frame, identidad, (x1,y1+20), font, 1,(0,0,255),2,cv2.LINE_AA)
-            # Enmarca el rostro del usuario identificado
-            frame = cv2.rectangle(frame,(x1, y1),(x2, y2),(255,0,0),2)
-        frame = 255-frame
+            cv2.imshow('parte', parte)
+        
+        frame = cv2.rectangle(frame,(x1, y1),(x2, y2),(255,0,0),2)
         cv2.imshow('Camara', frame)
         key = cv2.waitKey(1)
         if key == 27: # Preciona Esc para Salir
@@ -72,4 +59,41 @@ def camara(ip = None):
     CAP.release()
     cv2.destroyAllWindows()
 
-
+def register_camera(nombre, ip = None):
+    """
+    Registra y almacena imagenes del rostro del usuario
+    y devuelve la minima diferencia que debe tener para la identificación
+        nombre, el nombre del usuario 
+        ip, si se usa una camara inalambria especifique de forma:
+            "http://170.0.0.1:9000/video". Por ejemplo.
+    """
+    if ip == None:
+        active = CAP.open(0)
+    else:
+        active = CAP.open(ip+'/video')
+    while active:
+        _, frame = CAP.read()
+        partes, x1, x2, y1, y2 = get_face(frame)
+        frame = cv2.rectangle(frame,(x1, y1),(x2, y2),(255,0,0),2)
+        cv2.imshow('Camara', frame)
+        key = cv2.waitKey(1)
+        if key == 27: # Preciona Esc para Salir
+            parte_ant = partes[0]
+            distancias = []
+            for i in range(20):
+                _, frame = CAP.read()
+                partes, x1, x2, y1, y2 = get_face(frame)
+                parte = partes[0]
+                code_ant = get_img_code(parte_ant, model)
+                code = get_img_code(parte, model)
+                dist = np.linalg.norm(code_ant - code)
+                distancias.append(dist)
+                cv2.imwrite('images/'+nombre+'_'+str(i)+'.jpg', parte)
+            dist_max = np.array(distancias).max()
+            break
+    CAP.release()
+    cv2.destroyAllWindows()
+    database = load_database(model)
+    return dist_max
+            
+        
