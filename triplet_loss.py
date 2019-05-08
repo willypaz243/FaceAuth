@@ -14,7 +14,8 @@ def triplet_loss(y_true, y_pred, alpha = 0.3):
     """
     anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
 
-    # Step 1: Compute the (encoding) distance between the anchor and the positive, you will need to sum over axis=-1
+    # Paso 1: Calcule la distancia (de codificación)
+    # entre el ancla y el positivo, tendrá que sumar sobre eje = -1
     pos_dist = tf.reduce_sum(
         tf.square(
             tf.subtract(
@@ -24,11 +25,14 @@ def triplet_loss(y_true, y_pred, alpha = 0.3):
         ),
         axis=-1
     )
-    # Step 2: Compute the (encoding) distance between the anchor and the negative, you will need to sum over axis=-1
+    
+    # Paso 2: Calcule la distancia (de codificación) 
+    # entre el ancla y el negativo, tendrá que sumar sobre el eje = -1    
     neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)), axis=-1)
-    # Step 3: subtract the two previous distances and add alpha.
+    # Paso 3: restar las dos distancias anteriores y agregar alfa.
     basic_loss = tf.add(tf.subtract(pos_dist, neg_dist), alpha)
-    # Step 4: Take the maximum of basic_loss and 0.0. Sum over the training examples.
+    # Paso 4: Toma el máximo de basic_loss y 0.0. 
+    # Suma sobre los ejemplos de entrenamiento.
     loss = tf.reduce_sum(tf.maximum(basic_loss, 0.0))
 
     return loss
