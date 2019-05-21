@@ -4,6 +4,7 @@ import numpy as np
 import os
 import cv2 as cv2
 import glob
+import pandas as pd
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 # contiene un arreglo con todos los nombres de las capas
@@ -201,23 +202,15 @@ def get_img_code(img, model):
     # Devuelve la prediccion hecha por el modelo
     return model.predict_on_batch(x_train)
 
-def get_most_similar(img_input, database):
+def get_most_similar(img_input, model_k):
     """
     Devuelve el nombre de la imagen mas parecida de la base de datos
     a la imagen de entrada,
         img_input, imagen de entrada.
         database, un diccionario de imagenes 
     """
-    dist_min = 1.0
-    identidad = None
-    for name, img_code in database.items():
-        dist = np.linalg.norm(img_code - img_input)
-        if dist < dist_min:
-            dist_min = dist
-            identidad = name
-    # Devuelve en nombre de la imagen con menor diferencia 
-    # a la imagen de entradas
-    return str(identidad), str(dist)
+    identidad = model_k.that_class(np.array([img_input]))
+    return str(identidad)
 
 def get_face(frame):
     """
@@ -246,3 +239,27 @@ def get_face(frame):
         parte = frame[y1:y2, x1:x2]
         partes.append(parte)
     return partes, x1, x2, y1, y2
+
+def create_database(dataset):
+    """
+    Almacena el dataset en un archivo 'csv'.
+        dataset -> los datos a almacenar.
+    """
+    dataframe = pd.read_csv("images/database.csv", index_col="Unnamed: 0")
+    dataset = np.concatenate([dataframe.to_numpy(),np.array(dataset)])
+    dataframe = pd.DataFrame(dataset)
+    dataframe.to_csv("images/database.csv")
+
+
+def load_centroides():
+    """
+    Carga los centroides.
+    Los centroidos son puntos que agrupan los datos de las imagenes
+    que predice el modelo.
+    """
+    try:
+        centroides = pd.read_csv("centroides/centros.csv", index_col="Unnamed: 0")
+        centroides = centroides.to_dict("list")
+        return centroides
+    except:
+        return {}

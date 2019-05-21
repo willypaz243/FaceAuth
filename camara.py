@@ -1,29 +1,32 @@
+import pandas as pd
 import cv2 as cv2
 import keras
 import numpy as np
 from id_model import faceRecoModel
 from triplet_loss import triplet_loss
-from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar, get_face
+from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar, get_face, create_database, load_centroides
+from k_mean import K_mean
 
-# Creamos un nuevo modelo
-# model = faceRecoModel(input_shape=(3, 96, 96))
-print('Cargando pesos predefinidos....')
+
 # En este caso estamos cargando el modelo
+print('Cargando modelo de reconicimiento facial')
 model = keras.models.load_model('my_model.h5')
+
 # Fuente del texto para la imagen
 font = cv2.FONT_HERSHEY_SIMPLEX
+
 # Copila en modelo
 model.compile(optimizer = 'adam', loss = triplet_loss, metrics = ['accuracy'])
 
-# Carga los pesos de las capas
-#load_weights_from_FaceNet(model)
+# Modelo k-mean
+model_k = K_mean()
 
-# Creamos una base de datos con la imagenes del directorio 'images/'
-print('Creando Base de Datos....')
-database = load_database(model)
-
+centroides = load_centroides()
+model_k.set_centroides(np.array(list(centroides.values())))
+model_k.set_nombre(list(centroides.keys()))
 # Abrimos una captura de opencv
 CAP = cv2.VideoCapture()
+
 # Cargamos Clasificador en cascada que reconocera rostros humanos.
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
@@ -47,7 +50,7 @@ def camara(ip = None):
         partes, x1, x2, y1, y2 = get_face(frame)
         for parte in partes:
             # Identifica a la persona y estrae su nombre de la foto
-            identidad, dist = get_most_similar(get_img_code(parte, model), database)
+            identidad = get_most_similar(get_img_code(parte, model)[0], model_k)
             frame = cv2.putText(frame, identidad, (x1,y1+20), font, 1,(0,0,255),2,cv2.LINE_AA)
             cv2.imshow('parte', parte)
         
@@ -78,22 +81,23 @@ def register_camera(nombre, ip = None):
         cv2.imshow('Camara', frame)
         key = cv2.waitKey(1)
         if key == 27: # Preciona Esc para Salir
-            parte_ant = partes[0]
-            distancias = []
+            dataset = []
             for i in range(20):
                 _, frame = CAP.read()
                 partes, x1, x2, y1, y2 = get_face(frame)
                 parte = partes[0]
-                code_ant = get_img_code(parte_ant, model)
                 code = get_img_code(parte, model)
-                dist = np.linalg.norm(code_ant - code)
-                distancias.append(dist)
-                cv2.imwrite('images/'+nombre+'_'+str(i)+'.jpg', parte)
-            dist_max = np.array(distancias).max()
+                dataset.append(code[0])
+            dataset = np.array(dataset)
+            centroides = load_centroides()
+            centroides[nombre] = dataset.mean(axis=0)
+            create_database(dataset) # Guarda los datos de las nuevas imagenes
+            model_k.set_centroides(np.array(list(centroides.values())))
+            model_k.set_nombre(list(centroides.keys()))
+            dataframe = pd.DataFrame(centroides)
+            dataframe.to_csv("centroides/centros.csv")
             break
     CAP.release()
     cv2.destroyAllWindows()
-    database = load_database(model)
-    return dist_max
             
         
