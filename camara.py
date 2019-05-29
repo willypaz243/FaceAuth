@@ -4,9 +4,11 @@ import keras
 import numpy as np
 from id_model import faceRecoModel
 from triplet_loss import triplet_loss
-from utils import load_weights_from_FaceNet, load_database, get_img_code, get_most_similar, get_face, create_database, load_centroides
+from utils import load_weights_from_FaceNet, \
+    load_database, get_img_code, get_most_similar,\
+        get_face, create_database, load_centroides, load_data
 from k_mean import K_mean
-
+import os
 
 # En este caso estamos cargando el modelo
 print('Cargando modelo de reconicimiento facial')
@@ -22,8 +24,12 @@ model.compile(optimizer = 'adam', loss = triplet_loss, metrics = ['accuracy'])
 model_k = K_mean()
 
 centroides = load_centroides()
-model_k.set_centroides(np.array(list(centroides.values())))
-model_k.set_nombre(list(centroides.keys()))
+if centroides:
+    model_k.set_centroides(np.array(list(centroides.values())))
+    model_k.set_nombre(list(centroides.keys()))
+dataset = load_data()
+if dataset.size > 0:
+    model_k.train(dataset)
 # Abrimos una captura de opencv
 CAP = cv2.VideoCapture()
 
@@ -88,6 +94,7 @@ def register_camera(nombre, ip = None):
                 parte = partes[0]
                 code = get_img_code(parte, model)
                 dataset.append(code[0])
+            
             dataset = np.array(dataset)
             centroides = load_centroides()
             centroides[nombre] = dataset.mean(axis=0)
@@ -95,6 +102,8 @@ def register_camera(nombre, ip = None):
             model_k.set_centroides(np.array(list(centroides.values())))
             model_k.set_nombre(list(centroides.keys()))
             dataframe = pd.DataFrame(centroides)
+            if not os.path.exists("centroides"):
+                os.mkdir("centroides")
             dataframe.to_csv("centroides/centros.csv")
             break
     CAP.release()

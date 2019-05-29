@@ -245,11 +245,23 @@ def create_database(dataset):
     Almacena el dataset en un archivo 'csv'.
         dataset -> los datos a almacenar.
     """
-    dataframe = pd.read_csv("images/database.csv", index_col="Unnamed: 0")
-    dataset = np.concatenate([dataframe.to_numpy(),np.array(dataset)])
+    if not os.path.exists("images"):
+        os.mkdir("images")
+    if os.path.exists("database.csv"):
+        dataframe = pd.read_csv("images/database.csv", index_col="Unnamed: 0")
+        dataset = np.concatenate([dataframe.to_numpy(),np.array(dataset)])
     dataframe = pd.DataFrame(dataset)
     dataframe.to_csv("images/database.csv")
 
+def load_data():
+    """
+    Carga los datos para el entrenamiento.
+    """
+    if os.path.exists("images/database.csv"):
+        dataframe = pd.read_csv("images/database.csv", index_col="Unnamed: 0")
+        return dataframe.to_numpy()
+    else:
+        return np.array([])
 
 def load_centroides():
     """
