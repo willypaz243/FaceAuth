@@ -7,6 +7,7 @@ import glob
 import pandas as pd
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+EYE_CASCADE = cv2.CascadeClassifier('haarcascade_eye.xml')
 # contiene un arreglo con todos los nombres de las capas
 # creadas en el modelo y de inception_blocks
 WEIGHTS = [
@@ -185,12 +186,12 @@ def get_img_code(img, model):
         img, la imagen cargada como una matris.
         model, el modelo que generara su codigo.
     """
-    # Redimenciona a imagen
-    img = cv2.resize(img, (96, 96))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img[:,:,0] = cv2.equalizeHist(img[:,:,0])
     img[:,:,1] = cv2.equalizeHist(img[:,:,1])
     img[:,:,2] = cv2.equalizeHist(img[:,:,2])
+    # Redimenciona a imagen
+    img = cv2.resize(img, (96, 96))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # Cambia el formato de color de BGR a RGB
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #img = cv2.GaussianBlur(img,(3,3),1)
@@ -275,3 +276,35 @@ def load_centroides():
         return centroides
     except:
         return {}
+
+def prepare_k_means(model):
+    centroides = load_centroides()
+    if centroides:
+        model.set_centroides(np.array(list(centroides.values())))
+        model.set_nombre(list(centroides.keys()))
+    dataset = load_data()
+    if dataset.size > 0:
+        model.train(dataset)
+
+def straighten_image(img, eje, puntos):
+    cateto = (puntos[1][1]-puntos[0][1])
+    dist = ((puntos[1]-puntos[0])**2).sum()**0.5
+    angulo = np.degrees(np.math.asin(cateto/dist))
+    m = cv2.getRotationMatrix2D(eje,angulo,1)
+    img = cv2.warpAffine(img, m, img[:,:,0].shape)
+    return img
+def get_eyes_centers(img, x, y):
+    eyes = EYE_CASCADE.detectMultiScale(
+        img,
+        scaleFactor=1.2,
+        minNeighbors=6,
+        minSize=(28,28),
+        flags=cv2.CASCADE_SCALE_IMAGE
+    )
+    res = len(eyes) == 2
+    centros = []
+    if res:
+        for i,j,k,l in eyes:
+            centros.append([x+(i+k//2),y+(j+l//2)])
+        centros = np.array(centros)
+    return res, centros
