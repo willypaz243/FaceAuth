@@ -70,6 +70,7 @@ def register_camera(nombre, ip = None):
         active = CAP.open(0)
     else:
         active = CAP.open(ip+'/video')
+    muestras = []
     while active:
         _, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -81,7 +82,6 @@ def register_camera(nombre, ip = None):
             minSize=(96,96),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
-        muestras = []
         if len(faces) == 1 and len(muestras) <= 30:
             faces = faces[0]
             x1 = faces[0]
@@ -99,10 +99,12 @@ def register_camera(nombre, ip = None):
                 x_2 = 100
                 y_2 = 100
                 muestras.append(get_img_code(img[y_1:y_2, x_1:x_2], MODEL)[0])
+                print(muestras)
             cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0))
         cv2.imshow('Camara', frame)
-        dataset = np.array(muestras)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if (cv2.waitKey(1) & 0xFF == ord('q')) and len(muestras) >= 30:
+            dataset = np.float32(muestras)
+            print(dataset)
             centroides = load_centroides()
             centroides[nombre] = dataset.mean(axis=0)
             create_database(dataset) # Guarda los datos de las nuevas imagenes
