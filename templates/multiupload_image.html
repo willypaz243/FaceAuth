@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Imgage Upload</title>
+</head>
+<body>
+    <h1>Subir Imagenes</h1>
+    <form method="POST" enctype="multipart/form-data", action="http://127.0.0.1:5000/registro">
+        <label for="id_int_field">Int field:</label>
+        <input type="number" name="int_field" required="" id="id_int_field">
+        <br>
+        <label for="id_image_field">Image field:</label>
+        <input type="file" name="image_field" multiple>
+        <br>
+        <button type="submit" value="submit">Guardar!</button>
+    </form>
+    
+</body>
+</html>

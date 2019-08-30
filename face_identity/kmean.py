@@ -118,10 +118,10 @@ class K_mean():
         
     def load_model(self):
 
-        if os.path.exists("dataset"):
+        if os.path.exists(f"dataset/{self.model_name}_dataset.csv"):
             self.dataset = np.loadtxt(f"dataset/{self.model_name}_dataset.csv", delimiter=',')
             if len(self.dataset.shape) < 2:
-                self.dataset = np.array(self.dataset)
+                self.dataset = np.array([self.dataset])
         client = MongoClient()
         db = client[self.model_name]
         collections = db['users']
