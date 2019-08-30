@@ -1,6 +1,5 @@
 __pycache__
 .vscode
+pruebas.__pycache__
+dataset/
 pruebas.py
-images
-guardado
-centroides
