@@ -7,8 +7,8 @@ from face_identity.Identificador import Identificador
 print('Cargando modelo de reconicimiento facial')
 identificador = Identificador(name = "prueba")
 
-FACE_CASCADE = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-EYE_CASCADE = cv2.CascadeClassifier('haarcascade_eye.xml')
+FACE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_frontalface_default.xml')
+EYE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
 
 print('LISTO!')
 
