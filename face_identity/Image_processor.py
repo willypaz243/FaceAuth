@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 class Image_processor:
 
@@ -73,8 +72,6 @@ class Image_processor:
                 image = 255 - image
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
                 image = cv2.resize(image, (96, 96))
-                #plt.imshow(image)
-                #plt.show()
                 image = np.float32(image / 255)
                 processed_images.append(image)
         return np.float32(processed_images)
