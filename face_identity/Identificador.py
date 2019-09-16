@@ -72,7 +72,7 @@ class Identificador:
         image_codes = self.__encode_images(images)
         code = np.mean(image_codes, axis=0)
         identity = self.k_model.that_class(code)
-        return identity
+        return int(identity)
 
     def registrar_usuario(self, id_user, images):
         """
