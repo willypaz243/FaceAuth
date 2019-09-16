@@ -11,6 +11,9 @@ from .inception_blocks2 import inception_block_1a, inception_block_1b, inception
 #def convolution_layer(filter, size)
 
 def face_model():
+    """
+    Esta arquitectura de red nuronal esta basada en el paper https://arxiv.org/pdf/1503.03832.pdf    
+    """
 
     input_layer = tf.keras.layers.Input(shape=[96,96,3])
 

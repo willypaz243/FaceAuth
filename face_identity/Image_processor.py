@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 class Image_processor:
 
@@ -9,6 +8,12 @@ class Image_processor:
         self.eye_cascade = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
 
     def cut_face(self, image):
+        """
+        Corta el recuadro donde se encuentre un rostro.
+        
+        Args:
+            - image: Una imagen en forma de matriz de tipo numpy.
+        """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
         gray = cv2.equalizeHist(gray)
@@ -28,6 +33,14 @@ class Image_processor:
         return cut_image
     
     def eyes_centers(self, image):
+        """
+        Encuentra los puntos centrales de los ojos en una imagen, 
+        esto nos sirve para poder enderezar la imagen y evitar la
+        variacion en la identificación.
+        
+        Args:
+            - image: Una imagen en forma de matriz de tipo numpy.
+        """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         eyes = self.eye_cascade.detectMultiScale(
             gray,
@@ -44,6 +57,14 @@ class Image_processor:
         return centros
 
     def enderesar_imagen(self, image):
+        """
+        Usando los puntos donde se encuentran los ojos, enderesa la imagen para
+        evitar la variacion de la imagen al momento de identificar al alguien
+        mediante su foto.
+        
+        Args:
+            - image: Una imagen en forma de matriz de tipo numpy.
+        """
         centros = self.eyes_centers(image)
         imagen_enderezada = np.array([])
         if centros.any():
@@ -64,6 +85,12 @@ class Image_processor:
         return imagen_enderezada
 
     def process_image(self, images):
+        """
+        Procesa un lote de imagenes facilitar la detección e identificación de rostros.
+        
+        Args:
+            - images: Un lote imagenes en forma de matriz tipo numpy.
+        """
         processed_images = []
         for image in images:
             image = self.cut_face(image)
@@ -73,8 +100,6 @@ class Image_processor:
                 image = 255 - image
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
                 image = cv2.resize(image, (96, 96))
-                #plt.imshow(image)
-                #plt.show()
                 image = np.float32(image / 255)
                 processed_images.append(image)
         return np.float32(processed_images)
