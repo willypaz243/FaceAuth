@@ -4,12 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import tensorflow as tf
 from tensorflow import keras
 
+# Implementacion de los bloques.
+
 initializer = tf.random_normal_initializer(0., 0.02)
 
 def inception_block_1a(hidden_layer):
-    """
-    Implementacion de la incepción de bloques
-    """
     
     # 3x3========================================================
     layer_3x3 = keras.layers.Conv2D(96, (1, 1), kernel_initializer=initializer, name ='inception_3a_3x3_conv1')(hidden_layer)

@@ -34,7 +34,6 @@ def triplet_loss(y_true, y_pred, alpha = 0.3):
 
 class TripletLossLayer(tf.keras.layers.Layer):
     def __init__(self, alpha, **kwargs):
-        self.alpha = alpha
         super(TripletLossLayer, self).__init__(**kwargs)
     def call(self, inputs):
         loss = triplet_loss(y_true = None, y_pred=inputs)

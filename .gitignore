@@ -3,3 +3,5 @@ __pycache__
 dataset
 entrenamiento/dataset/*
 images
+face_identity/__init__.pyc
+face_identity/face_model.pyc

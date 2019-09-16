@@ -15,6 +15,15 @@ print('LISTO!')
 CAP = cv2.VideoCapture()
 
 def camara(ip=None):
+    """
+    Mientras se captura las imagenes de una camara, esta función detecta los
+    rostros de cada frame y los identifica.
+    
+    Args:
+        - ip: En el caso de que se use una camara mediante wifi,
+              recibe una entrada de esta forma "http://127.0.0.1"
+              o el ip de su dispositivo.
+    """
     font = cv2.FONT_HERSHEY_SIMPLEX
     if ip == None:
         active = CAP.open(0)
@@ -39,7 +48,7 @@ def camara(ip=None):
             x2 = x+w
             y2 = y+h
             input_images.append(frame)
-            if len(input_images) > 10:
+            if len(input_images) > 5:
                 nombre = identificador.identify(input_images)
                 input_images = []
             cv2.putText(frame, str(nombre), (x1,y1+10), font, 1,(0,0,255), 2, cv2.LINE_AA)
@@ -51,15 +60,28 @@ def camara(ip=None):
     cv2.destroyAllWindows()
 
 
-def register_camera(nombre, ip = None):
-    nombre  = nombre.upper()
+def register_camera(id_user, ip = None):
+    """
+    Sirve para registrar a un usuario al cual identificarlo mediante su rostro.
+    
+    Args:
+        - id_user: debe ser un número por el cual se identificara
+                   a una persona.
+                   
+        - ip: En el caso de que se use una camara mediante wifi,
+              recibe una entrada de esta forma "http://127.0.0.1"
+              o el ip de su dispositivo.
+    """
+    mjs = "id_user debe ser un número"
     res = False
     if ip == None:
         active = CAP.open(0)
     else:
         active = CAP.open(ip+'/video')
     images = []
-    while active:
+    while active and id_user.isnumeric():
+        mjs = 'Preciona "q" para registrar su rostro'.
+        print(mjs)
         _, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.equalizeHist(gray)
@@ -81,12 +103,13 @@ def register_camera(nombre, ip = None):
             if len(images) > 30:
                 images.remove(images[0])
         cv2.imshow('Camara', frame)
-        cv2.imshow('gray', gray)
         if (cv2.waitKey(1) & 0xFF == ord('q')):
             images = np.array(images)
             print(images.shape)
-            res = identificador.registrar_usuario(nombre, images)
+            res = identificador.registrar_usuario(id_user, images)
+            mjs = 'Su registro se completo exitosamente'
             break
+    print(mjs)
     CAP.release()
     cv2.destroyAllWindows()
     return res

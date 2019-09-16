@@ -3,7 +3,7 @@ import numpy as np
 from pymongo import MongoClient
 
 class K_mean():
-    """Modelo de agrupacion"""
+    """Modelo de agrupacion de clases"""
     def __init__(self, model_name):
         self.model_name = model_name
         
@@ -18,6 +18,9 @@ class K_mean():
         """
         Mueve los puntos centrales "centroides" a una distancia media 
         de los datos de cada dato del dataset.
+        
+        Args:
+            - dataset: Un conjunto de datos de las caracteristicas que se evaluan en cada clase.
         """
         dimenciones = np.array(self.centroides).shape
         centroides_ant = np.random.rand(dimenciones[0],dimenciones[1])*6
@@ -38,7 +41,7 @@ class K_mean():
     def set_centroides(self, centroides):
         self.centroides = centroides
         self.grupos = self.centroides.shape[0]
-        self.load_radios()
+        self.set_radios()
 
     def set_id_users(self, ids):
         self.ids = ids
@@ -60,6 +63,7 @@ class K_mean():
 
     def add_class(self, id_user, codes):
         registered = False
+        id_user = float(id_user)
         if codes.any():
             new_centroid = np.mean(codes, axis=0)
             if not self.dataset.any():
@@ -78,11 +82,11 @@ class K_mean():
                 self.train(self.dataset)
                 registered = True
 
-            self.load_radios()
+            self.set_radios()
             self.save_model()
         return registered
 
-    def load_radios(self):
+    def set_radios(self):
 
         if self.grupos > 1:
             radios = []
@@ -103,18 +107,23 @@ class K_mean():
         if not os.path.exists("dataset"):
             os.mkdir("dataset")
         np.savetxt(f"dataset/{self.model_name}_dataset.csv", self.dataset, fmt='%r', delimiter=',')
-        client = MongoClient()
-        db = client[self.model_name]
-        collections = db['users']
-        for index, id_user in enumerate(self.ids):
-            new_user = {
-                        '_id': id_user,
-                        'code': self.centroides[index].tolist()
-                        }
-            if collections.find_one(id_user) == None:
-                collections.insert_one(new_user).inserted_id
-            else:
-                collections.replace_one(collections.find_one(id_user), new_user)
+        database = np.concatenate([np.transpose([self.ids]), self.centroides], axis=1)
+        np.savetxt(f'dataset/{self.model_name}_database.csv', database, fmt='%r', delimiter=',')
+        
+        # en caso de usar MongoDB
+        
+        # client = MongoClient()
+        # db = client[self.model_name]
+        # collections = db['users']
+        # for index, id_user in enumerate(self.ids):
+        #     new_user = {
+        #                 '_id': id_user,
+        #                 'code': self.centroides[index].tolist()
+        #                 }
+        #     if collections.find_one(id_user) == None:
+        #         collections.insert_one(new_user).inserted_id
+        #     else:
+        #         collections.replace_one(collections.find_one(id_user), new_user)
         
     def load_model(self):
 
@@ -122,12 +131,22 @@ class K_mean():
             self.dataset = np.loadtxt(f"dataset/{self.model_name}_dataset.csv", delimiter=',')
             if len(self.dataset.shape) < 2:
                 self.dataset = np.array([self.dataset])
-        client = MongoClient()
-        db = client[self.model_name]
-        collections = db['users']
-        for clase in collections.find():
-            self.ids.append(clase['_id'])
-            self.centroides.append(np.array(clase['code']))
-            self.grupos += 1
-        self.load_radios()
+        if os.path.exists(f'dataset/{self.model_name}_database.csv'):
+            database = np.loadtxt(f'dataset/{self.model_name}_database.csv', delimiter=',')
+            if len(database) < 2:
+                database = np.array([database])
+            ids = database[:,0:1]
+            self.ids = np.ravel(np.int32(ids))
+            self.centroides = database[:,1:]
+
+        # en caso de usar MongoDB
+        
+        # client = MongoClient()
+        # db = client[self.model_name]
+        # collections = db['users']
+        # for clase in collections.find():
+        #     self.ids.append(clase['_id'])
+        #     self.centroides.append(np.array(clase['code']))
+        #     self.grupos += 1
+        # self.set_radios()
         #print('Cargando kmeans...')

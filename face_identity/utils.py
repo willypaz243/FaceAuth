@@ -90,14 +90,6 @@ def conv2d_bn(
         cv2_strides=(1, 1),
         padding=None
     ):
-    """
-    Crea un tensor de capas,
-        layer, la capa inicial
-        layer_name, nombre de la capa
-        cv1_out, cv2_out, numero de filtros de salida
-        cv1_filter, cv2_filter, tamaño del kernel
-        cv1_strides, cv2_strides, strides
-    """
     num = '' if cv2_out == None else '1'
 
     tensor = keras.layers.Conv2D(cv1_out, cv1_filter, strides=cv1_strides, data_format='channels_first', name=layer_name+'_conv'+num)(layer)
@@ -120,7 +112,7 @@ def conv2d_bn(
 def load_weights_from_FaceNet(model):
     """
     Cargar pesos desde archivos csv 
-    (que se exportaron desde el modelo de antorcha Openface)
+    (que se importaron desde el modelo de torch Openface)
     """
     weights = WEIGHTS
     weights_dict = load_weights()
@@ -133,7 +125,7 @@ def load_weights_from_FaceNet(model):
             model.get_layer(name).set_weights(weights_dict[name])
 
 def load_weights():
-    # Establecer la ruta de los pesos
+    """Establecer la ruta de los pesos"""
     dirPath = './weights'
     fileNames = filter(lambda f: not f.startswith('.'), os.listdir(dirPath))
     paths = {}
