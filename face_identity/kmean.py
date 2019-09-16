@@ -8,8 +8,8 @@ class K_mean():
         self.model_name = model_name
         
         self.grupos = 0
-        self.centroides = []
-        self.ids = []
+        self.centroides = np.array([])
+        self.ids = np.array([])
         self.radios = []
         self.dataset = np.array([])
         self.load_model()
@@ -23,7 +23,7 @@ class K_mean():
             - dataset: Un conjunto de datos de las caracteristicas que se evaluan en cada clase.
         """
         dimenciones = np.array(self.centroides).shape
-        centroides_ant = np.random.rand(dimenciones[0],dimenciones[1])*6
+        centroides_ant = np.random.rand(dimenciones[0],dimenciones[1])
         print("TRAINING...")
         diferencia = centroides_ant - self.centroides
         while diferencia.max() > 0:
@@ -54,12 +54,12 @@ class K_mean():
             distancias = list(((self.centroides-entrada)**2).sum(axis=1))
             minimo = min(distancias)
             indice = distancias.index(minimo)
-            if minimo < self.radios[indice]:
+            if minimo < self.radios[indice]: # debe de estar lo suficientemente cerca.
                 return self.ids[indice]
             else:
-                return "Desconocido"
+                return None
         else:
-            return "Desconocido"
+            return None
 
     def add_class(self, id_user, codes):
         registered = False
@@ -70,20 +70,24 @@ class K_mean():
                 self.dataset = codes
             else :
                 self.dataset = np.append(self.dataset, codes, axis=0)
-            if self.ids.count(id_user) == 1:
+            if list(self.ids).count(id_user) >= 1:
                 if self.that_class(new_centroid) == id_user:
                     self.train(self.dataset)
                     registered = True
                 pass
             else:
                 self.grupos += 1
-                self.ids.append(id_user)
-                self.centroides.append(new_centroid)
+                self.ids = np.append(self.ids, id_user)
+                if not self.centroides.any():
+                    self.centroides = np.array([new_centroid])
+                else:
+                    self.centroides = np.append(self.centroides, [new_centroid], axis=0)
+                
                 self.train(self.dataset)
                 registered = True
 
-            self.set_radios()
             self.save_model()
+        self.set_radios()
         return registered
 
     def set_radios(self):
@@ -133,11 +137,13 @@ class K_mean():
                 self.dataset = np.array([self.dataset])
         if os.path.exists(f'dataset/{self.model_name}_database.csv'):
             database = np.loadtxt(f'dataset/{self.model_name}_database.csv', delimiter=',')
-            if len(database) < 2:
+            if len(database.shape) < 2:
                 database = np.array([database])
             ids = database[:,0:1]
             self.ids = np.ravel(np.int32(ids))
             self.centroides = database[:,1:]
+            self.grupos = self.centroides.shape[0]
+        self.set_radios()
 
         # en caso de usar MongoDB
         
@@ -148,5 +154,5 @@ class K_mean():
         #     self.ids.append(clase['_id'])
         #     self.centroides.append(np.array(clase['code']))
         #     self.grupos += 1
-        # self.set_radios()
+        # 
         #print('Cargando kmeans...')
