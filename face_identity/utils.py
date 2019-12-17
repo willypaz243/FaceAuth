@@ -116,17 +116,18 @@ def load_weights_from_FaceNet(model):
     """
     weights = WEIGHTS
     weights_dict = load_weights()
-
-    # Establecer los pesos de capa del modelo.
     for name in weights:
+        print(name, '<----------')
         if model.get_layer(name) != None:
+            print(model.get_layer(name).get_weights()[0].shape)
+            print(weights_dict[name][0].shape)
             model.get_layer(name).set_weights(weights_dict[name])
         elif model.get_layer(name) != None:
             model.get_layer(name).set_weights(weights_dict[name])
 
 def load_weights():
     """Establecer la ruta de los pesos"""
-    dirPath = './weights'
+    dirPath = 'face_identity/weights'
     fileNames = filter(lambda f: not f.startswith('.'), os.listdir(dirPath))
     paths = {}
     weights_dict = {}

@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from .kmean import K_mean
-from .Image_processor import Image_processor
+from .image_processor import procesar_imagenes
 from .utils import load_weights_from_FaceNet
 from .face_model import face_model
 
@@ -18,7 +18,6 @@ class Identificador:
         self.model_name = name
         self.face_net = self.__inicializar_face_net()
         self.k_model = self.__inicializar_k_model()
-        self.img_processor = Image_processor()
 
     def __inicializar_k_model(self):
         """
@@ -35,12 +34,14 @@ class Identificador:
         facenet = None
         if os.path.exists('./face_identity/model.h5'):
             print("Cargando modelo existente..")
+            facenet = face_model()
             #facenet = create_face_model()
-            facenet = keras.models.load_model("./face_identity/model.h5")
+            facenet.load_weights("./face_identity/model.h5")
             #facenet.compile(optimizer='adam', loss=triplet_loss, metrics=['accuracy'])
         else:
             print('Cargando modelo desde los archivos CSV...')
             facenet = face_model()
+            print('Modelo cargado, cargando pesos....')
             load_weights_from_FaceNet(facenet)
             #facenet.compile(optimizer='adam', loss=triplet_loss, metrics=['accuracy'])
             keras.models.save_model(facenet, "./face_identity/model.h5")
@@ -53,11 +54,10 @@ class Identificador:
         Args:
             - images: Un lote imagenes en forma de matriz tipo numpy.
         """
-        faces = self.img_processor.process_image(images)
+        images = procesar_imagenes(images)
         face_codes = []
-        if faces.any():
-            input_faces = tf.cast(faces, tf.float32)
-            face_codes = self.face_net.predict(input_faces)
+        if len(images) > 0:
+            face_codes = self.face_net(images).numpy()
         return face_codes
 
     # Publicas
@@ -65,6 +65,8 @@ class Identificador:
     def identify(self, images):
         """
         Identifica a una persona usando un lote de imagenes con su rostro.
+        
+        Es importante que en las imagenes aparesca únicamente el rostro.
         
         Args:
             - images: Un lote imagenes en forma de matriz tipo numpy.
@@ -78,6 +80,8 @@ class Identificador:
     def registrar_usuario(self, id_user, images):
         """
         Registra un lote de imagenes con el rostro de quie se quiere identificar asignados a un id.
+        
+        Es importante que en las imagenes aparesca únicamente el rostro.
         
         Args:
             - id_user: Un numero entero que se asigna al usuario a identificar.

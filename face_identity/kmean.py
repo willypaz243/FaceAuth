@@ -10,11 +10,11 @@ class K_mean():
         self.grupos = 0
         self.centroides = np.array([])
         self.ids = np.array([])
-        self.radios = []
+        self.radios = 0.01
         self.dataset = np.array([])
         self.load_model()
 
-    def train(self, dataset):
+    def train(self, dataset, graficar=False):
         """
         Mueve los puntos centrales "centroides" a una distancia media 
         de los datos de cada dato del dataset.
@@ -51,9 +51,11 @@ class K_mean():
         devuelve el nombre del grupo al que pertenece un punto de entrada.
         """
         if not len(self.centroides) == 0:
-            distancias = list(((self.centroides-entrada)**2).sum(axis=1))
+            distancias = np.linalg.norm(self.centroides - entrada, axis=1)
+            #print(self.model_name)
+            print(distancias,'\n', self.radios)
             minimo = min(distancias)
-            indice = distancias.index(minimo)
+            indice = distancias.argmin()
             if minimo < self.radios[indice]: # debe de estar lo suficientemente cerca.
                 return self.ids[indice]
             else:
@@ -95,17 +97,16 @@ class K_mean():
         if self.grupos > 1:
             radios = []
 
-            for v in self.centroides:
-                centros = np.array(self.centroides).tolist()
-
-                if centros.count(list(v)) >= 1:
-                    centros.remove(list(v))
-                centros = np.array(centros)
-                radio = ((v - centros)**2).sum(axis=1).min()/2
+            for c in self.centroides:
+                radio = np.linalg.norm(self.centroides - c, axis=1)
+                radio = radio[radio != 0].min() / 2
+                print(radio)
                 radios.append(radio)
-            self.radios = radios
-        else:
-            self.radios.append(0.5)
+            self.radios = np.array(radios)
+            
+        elif self.grupos == 1:
+            self.radios = np.array([np.linalg.norm(self.centroides - self.dataset, axis=1).mean()])
+        
     
     def save_model(self):
         if not os.path.exists("dataset"):

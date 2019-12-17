@@ -5,7 +5,7 @@ from face_identity.Identificador import Identificador
 
 
 print('Cargando modelo de reconicimiento facial')
-identificador = Identificador(name = "prueba")
+identificador = Identificador(name = "scesi_auth")
 
 FACE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_frontalface_default.xml')
 EYE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
@@ -27,12 +27,16 @@ def camara(ip=None):
     font = cv2.FONT_HERSHEY_SIMPLEX
     if ip == None:
         active = CAP.open(0)
+        #active = CAP.open('videoplayback.mp4')
+        #active = CAP.open('crespo_respuesta_a_jl.mp4')
     else:
         active = CAP.open(ip+'/video')
     input_images = []
     nombre = "Detectando..."
     while active:
         _, frame = CAP.read()
+        new_shape = tuple(np.array(list(reversed(frame.shape[:-1]))) // 2)
+        frame = cv2.resize(frame, new_shape)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = FACE_CASCADE.detectMultiScale(
@@ -47,11 +51,13 @@ def camara(ip=None):
             y1 = y
             x2 = x+w
             y2 = y+h
+            
             input_images.append(frame)
-            if len(input_images) > 5:
+            
+            if len(input_images) > 30:
                 nombre = identificador.identify(input_images)
                 input_images = []
-            cv2.putText(frame, str(nombre), (x1,y1+10), font, 1,(0,0,255), 2, cv2.LINE_AA)
+            cv2.putText(frame, str(nombre), (x1,y1+20), font, 1,(0,0,255), 2, cv2.LINE_AA)
             cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0))
         cv2.imshow('CAMARA', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -79,9 +85,9 @@ def register_camera(id_user, ip = None):
     else:
         active = CAP.open(ip+'/video')
     images = []
+    mjs = 'Preciona "q" para registrar su rostro'
+    print(mjs)
     while active and id_user.isnumeric():
-        mjs = 'Preciona "q" para registrar su rostro'.
-        print(mjs)
         _, frame = CAP.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.equalizeHist(gray)
@@ -113,3 +119,9 @@ def register_camera(id_user, ip = None):
     CAP.release()
     cv2.destroyAllWindows()
     return res
+
+if __name__ == "__main__":
+    camara()
+    #register_camera('1232')
+    #camara('http://192.168.1.159:4747')
+    #register_camera('1232', 'http://192.168.1.159:4747')

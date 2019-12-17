@@ -5,3 +5,4 @@ entrenamiento/dataset/*
 images
 face_identity/__init__.pyc
 face_identity/face_model.pyc
+model_view.py
