@@ -1,105 +1,97 @@
 import cv2
+import dlib
 import numpy as np
+import tensorflow as tf
 
-class Image_processor:
+predictor = dlib.get_frontal_face_detector()
+detector = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
-    def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier('face_identity/haarcascade_frontalface_default.xml')
-        self.eye_cascade = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
+def rescale_image(image):
+    """
+    Escala la imagen a un tamaño tal que su anchura sea de 512px.
+    Args:
+        -image: una imagen de tipo matriz NumPy.
+    Returns:
+        Retorna la imagen escalada.
+    """
+    x, y = image.shape[:2]
+    scale = 512 / y
+    x = round(x * scale)
+    y = 512
+    image = cv2.resize(image, (y,x))
+    return scale, image
 
-    def cut_face(self, image):
-        """
-        Corta el recuadro donde se encuentre un rostro.
-        
-        Args:
-            - image: Una imagen en forma de matriz de tipo numpy.
-        """
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-        gray = cv2.equalizeHist(gray)
-        faces = self.face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.2,
-            minNeighbors=6,
-            minSize=(96, 96),
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        faces = np.array(faces)
-        cut_image = np.array([])
-        if faces.any():
-            x, y, w, h = faces[0]
-            cut_image = image[y:y + h, x:x + w]
-            cut_image = self.enderesar_imagen(cut_image)
-        return cut_image
+def get_landmarks(gray):
+    """
+    Obtiene puntos LandMarks de una imagen que contenga un solo rostro.
     
-    def eyes_centers(self, image):
-        """
-        Encuentra los puntos centrales de los ojos en una imagen, 
-        esto nos sirve para poder enderezar la imagen y evitar la
-        variacion en la identificación.
-        
-        Args:
-            - image: Una imagen en forma de matriz de tipo numpy.
-        """
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        eyes = self.eye_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.2,
-            minNeighbors=6,
-            minSize=(16,16),
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        centros = np.int32([])
-        if len(eyes) >= 2:
-            for x,y,w,h in eyes:
-                centros = np.append(centros, [x + w // 2, y + h // 2])
-            centros = np.reshape(centros, (centros.shape[0]//2,2))
-        return centros
+    El rostro debe ocupar la mayor parte del área de la imagen.
+    
+    Los puntos LandMarks son puntos caracteristicos del rostro que nos sirve para hacer seguimiento de distintas partes del rostro como nariz, ojos, boca, etc.
+    Args:
+        -gray: una imagen a escala de grises de tipo matriz NumPy.
+    Returns:
+        -retorna una matriz NumPy de dimensiones (2, 68), es decir 68 puntos (x,y)
+    """
+    x,y = gray.shape
+    face = dlib.rectangle(0, 0, y, x)
+    landmarks = detector(gray, face)
+    landmarks = landmarks_to_numpy(landmarks)
+    return landmarks
 
-    def enderesar_imagen(self, image):
-        """
-        Usando los puntos donde se encuentran los ojos, enderesa la imagen para
-        evitar la variacion de la imagen al momento de identificar al alguien
-        mediante su foto.
-        
-        Args:
-            - image: Una imagen en forma de matriz de tipo numpy.
-        """
-        centros = self.eyes_centers(image)
-        imagen_enderezada = np.array([])
-        if centros.any():
-            x , y , _ = image.shape
-            b1 = centros[:,0] < x / 2
-            b2 = centros[:,0] > x / 2
-            centros = np.int32([
-                np.mean(np.delete(centros, np.where(b1==False), axis=0), axis=0),
-                np.mean(np.delete(centros, np.where(b2==False), axis=0), axis=0)
-            ])
-            if centros[0][0] < x / 2 and centros[1][0] > x / 2:
-                cateto = (centros[1][1] - centros[0][1])
-                dist = ((centros[1] - centros[0]) ** 2).sum() ** 0.5
-                angulo = np.degrees(np.math.asin(cateto / dist))
-                m = cv2.getRotationMatrix2D((x // 2, y // 2), angulo, 1)
-                image = cv2.warpAffine(image, m, (x, y))
-                imagen_enderezada = image[abs(cateto): x - abs(cateto), abs(cateto): y - abs(cateto)]
-        return imagen_enderezada
+def landmarks_to_numpy(landmarks):
+    """
+    Convierte los puntos LandMarks de tipo Points tipo de dato que retorna la libreria Dlib en una matriz NumPy.
+    Arg:
+        -landmarks: 68 puntos de tipo Points obtenidos de la libreria Dlib.
+    Returns:
+        -Retorna los mismos puntos en formato matriz NumPy.
+    """
+    points = []
+    for point in landmarks.parts():
+        points.append([point.x, point.y])
+    return np.array(points)
 
-    def process_image(self, images):
-        """
-        Procesa un lote de imagenes facilitar la detección e identificación de rostros.
-        
-        Args:
-            - images: Un lote imagenes en forma de matriz tipo numpy.
-        """
-        processed_images = []
-        for image in images:
-            image = self.cut_face(image)
-            if image.any():
-                for i in range(3):
-                    image[:, :, i] = cv2.equalizeHist(image[:, :, i])
-                image = 255 - image
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-                image = cv2.resize(image, (96, 96))
-                image = np.float32(image / 255)
-                processed_images.append(image)
-        return np.float32(processed_images)
+def calcular_angulo(reference_points):
+    punto1, punto2 = reference_points
+    catetos = punto2-punto1
+    radio = np.linalg.norm(catetos)
+    angulo = np.degrees(np.arcsin(catetos[1] / radio))
+    return angulo
+
+def enderezar_imagen(image, angulo):
+    x, y = image.shape[:2]
+    centro = np.array(image.shape[:2]) // 2
+    cateto = np.deg2rad(angulo)
+    cateto = int(centro.mean() * np.math.sin(cateto))
+    giro = cv2.getRotationMatrix2D(tuple(centro), angulo, 1)
+    image = cv2.warpAffine(image, giro, (x, y))
+    return image
+
+def rotar_puntos(puntos, angulo, centro):
+    """
+    Mueve una serie de puntos (x,y) sobre un centro.
+    Esta funcion se utiliza para rotar los puntos LandMarks que se extrajo de una imagen.
+    
+    Arg:
+        - puntos: Una matriz NumPy de dimenciones (2,n) donde n la cantidad de puntos.
+        - angulo: En angulo que rotaran los puntos sobre el eje centro.
+        - centro: Es el punto de referencia sobre el que rotaran los puntos.
+    Returns:
+        - Retorna los puntos ya rotados en una matriz NumPy.
+    """
+    vectores = puntos - centro
+    radios = np.linalg.norm(vectores, axis=1)
+    x = vectores[:,0]
+    y = vectores[:,1]
+    
+    
+    angulos = 360*((y < 0) * (x > 0)) + 180 * ((x < 0) * (y < 0)) + 180 * ((x < 0) * (y > 0)) + np.degrees(np.arctan(y/( x + 1e-100)))
+    angulos = np.deg2rad(angulos)
+    puntos[:,0] = radios * np.cos(angulos)
+    puntos[:,1] = radios * np.sin(angulos)
+    puntos = puntos + centro
+    radios = np.linalg.norm(centro-puntos, axis=1)
+    #print(radios.max())
+    return np.round(puntos).astype('int')
+

@@ -22,8 +22,8 @@ class K_mean():
         Args:
             - dataset: Un conjunto de datos de las caracteristicas que se evaluan en cada clase.
         """
-        dimenciones = np.array(self.centroides).shape
-        centroides_ant = np.random.rand(dimenciones[0],dimenciones[1])
+        x ,y  = np.array(self.centroides).shape[:2]
+        centroides_ant = np.random.rand(x, y)
         print("TRAINING...")
         diferencia = centroides_ant - self.centroides
         while diferencia.max() > 0:
@@ -51,9 +51,10 @@ class K_mean():
         devuelve el nombre del grupo al que pertenece un punto de entrada.
         """
         if not len(self.centroides) == 0:
-            distancias = list(((self.centroides-entrada)**2).sum(axis=1))
-            minimo = min(distancias)
-            indice = distancias.index(minimo)
+            distancias = np.linalg.norm(self.centroides-entrada, axis=1)
+            minimo = distancias.min()
+            indice = np.argmin(distancias)
+            #print(minimo, '--', self.radios[indice])
             if minimo < self.radios[indice]: # debe de estar lo suficientemente cerca.
                 return self.ids[indice]
             else:
@@ -80,6 +81,8 @@ class K_mean():
                 self.ids = np.append(self.ids, id_user)
                 if not self.centroides.any():
                     self.centroides = np.array([new_centroid])
+                    new_radio = np.linalg.norm(codes - new_centroid, axis=1).max()
+                    self.radios.append(new_radio)
                 else:
                     self.centroides = np.append(self.centroides, [new_centroid], axis=0)
                 
@@ -101,11 +104,14 @@ class K_mean():
                 if centros.count(list(v)) >= 1:
                     centros.remove(list(v))
                 centros = np.array(centros)
-                radio = ((v - centros)**2).sum(axis=1).min()/2
+                radio = np.linalg.norm(centros - v, axis=1).min() * 0.75
                 radios.append(radio)
             self.radios = radios
-        else:
-            self.radios.append(0.5)
+        elif self.grupos == 1:
+            centro = self.centroides[0]
+            radio = np.linalg.norm(self.dataset - centro, axis=1).max()
+            self.radios.append(radio)
+            
     
     def save_model(self):
         if not os.path.exists("dataset"):
