@@ -1,8 +1,12 @@
 __pycache__
 .vscode
 dataset
-entrenamiento/dataset/*
+entrenamiento/*
 images
 face_identity/__init__.pyc
 face_identity/face_model.pyc
-model_view.py
+templates
+nn4.small2.v1.h5
+facenet.png
+server.py
+manage.py
