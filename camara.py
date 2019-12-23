@@ -7,10 +7,7 @@ from face_identity.kmean import K_mean
 
 print('Cargando modelo de reconicimiento facial')
 identificador = Identificador(name = "scesi_auth")
-<<<<<<< HEAD
-=======
 k_mean = K_mean('pruebas_1_km')
->>>>>>> new_IDF
 
 FACE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_frontalface_default.xml')
 EYE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
@@ -89,29 +86,6 @@ def camara(ip=None):
             new_code = encode_images[index].reshape((1, 128))
             input_image_codes.append(new_code)
 
-<<<<<<< HEAD
-        faces = FACE_CASCADE.detectMultiScale(
-            gray,
-            scaleFactor=1.2,
-            minNeighbors=6,
-            minSize=(96,96),
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        for x,y,w,h in faces:
-            x1 = x
-            y1 = y
-            x2 = x+w
-            y2 = y+h
-            
-            input_images.append(frame)
-            
-            if len(input_images) > 30:
-                nombre = identificador.identify(input_images)
-                input_images = []
-            cv2.putText(frame, str(nombre), (x1,y1+20), font, 1,(0,0,255), 2, cv2.LINE_AA)
-            cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0))
-=======
->>>>>>> new_IDF
         cv2.imshow('CAMARA', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -137,16 +111,10 @@ def register_camera(id_user, ip = None):
         active = CAP.open(0)
     else:
         active = CAP.open(ip+'/video')
-<<<<<<< HEAD
-    images = []
-    mjs = 'Preciona "q" para registrar su rostro'
-    print(mjs)
-=======
     input_codes = []
     mjs = 'Preciona "q" para registrar su rostro'
     print(mjs)
     
->>>>>>> new_IDF
     while active and id_user.isnumeric():
         _, frame = CAP.read()
         frame[:50] = np.array([0, 0, 255])
@@ -174,13 +142,6 @@ def register_camera(id_user, ip = None):
     return res
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    camara()
-    #register_camera('1232')
-    #camara('http://192.168.1.159:4747')
-    #register_camera('1232', 'http://192.168.1.159:4747')
-=======
     camara('http://192.168.1.159:4040')
     #camara()
     #register_camera('1234', 'http://192.168.1.159:4040')
->>>>>>> new_IDF
