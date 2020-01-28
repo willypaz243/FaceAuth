@@ -5,7 +5,7 @@ numpy==1.16.4
 numpydoc==0.9.1
 opencv-python==4.1.0.25
 pymongo==3.9.0
-tensorflow==2.0.0
+tensorflow==2.0.1
 tf-estimator-nightly==1.14.0.dev2019060501
 Flask==1.1.1
 Flask-Login==0.4.1
