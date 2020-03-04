@@ -1,147 +1,133 @@
 import cv2
+import dlib
 import numpy as np
 
-from face_identity.Identificador import Identificador
-from face_identity.kmean import K_mean
+from face_auth.FaceDetector import FaceDetector
+from face_auth.ImgProcessor import ImgProcessor
+from face_auth.FaceEncoder import FaceEncoder
+from face_auth.face_model import face_model
+from face_auth.kmean import K_mean
+from face_auth.Identifier import Identifier
 
+predictor = dlib.get_frontal_face_detector()
+face_detector = FaceDetector(predictor)
 
-print('Cargando modelo de reconicimiento facial')
-identificador = Identificador(name = "scesi_auth")
-k_mean = K_mean('pruebas_1_km')
+landmark_detector = dlib.shape_predictor("face_auth/datas/shape_predictor_68_face_landmarks.dat")
+img_processor = ImgProcessor(landmark_detector)
 
-FACE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_frontalface_default.xml')
-EYE_CASCADE = cv2.CascadeClassifier('face_identity/haarcascade_eye.xml')
+model = face_model()
+model.load_weights("face_auth/models/model.h5")
+face_encoder = FaceEncoder(model)
 
-print('LISTO!')
+k_mean = K_mean(model_name="testing")
 
-CAP = cv2.VideoCapture()
+identifier = Identifier(face_encoder, k_mean, "test_identifier")
 
-def camara(ip=None):
-    """
-    Mientras se captura las imagenes de una camara, esta función detecta los
-    rostros de cada frame y los identifica.
-    
-    Args:
-        - ip: En el caso de que se use una camara mediante wifi,
-              recibe una entrada de esta forma "http://127.0.0.1"
-              o el ip de su dispositivo.
-    """
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    if ip == None:
-        active = CAP.open(0)
-        #active = CAP.open('videoplayback.mp4')
-        #active = CAP.open('crespo_respuesta_a_jl.mp4')
-    else:
-        active = CAP.open(ip+'/video')
-    input_image_codes = []
-    nombre = "Detectando..."
-    while active:
-        _, frame = CAP.read()
-        new_shape = tuple(np.array(list(reversed(frame.shape[:-1]))) // 2)
-        frame = cv2.resize(frame, new_shape)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_boxes, encode_images = identificador.box_and_encode(frame)
+cap = cv2.VideoCapture()
+
+def register(id_user):
+    #activo = cap.open("videoplayback.mp4")
+    #activo = cap.open("http://192.168.1.243:4040/video")
+    activo = cap.open(0)
+    face_images = []
+    while activo:
+        done, frame = cap.read()
+        scale, frame = img_processor.rescale_img(frame, resolution=720)
+        faces = face_detector(frame)
         
-        media = []
-        for code in input_image_codes:
-            media.append(np.median(code, axis=0))
-        media = np.array(media)
-        
-        if len(input_image_codes) == 0 and len(encode_images) > 0:
-            input_image_codes = list(encode_images.reshape((len(encode_images), 1, 128)))
-            #print(input_image_codes)
-        elif len(encode_images) == len(input_image_codes):
-            
-            for face_box, code in zip(face_boxes, encode_images):
-                index = np.linalg.norm(media - code, axis=1).argmin()
-                input_image_codes[index] = np.concatenate([ input_image_codes[index], [code] ])
-                nombre = 'Detectando...'
-                if len(input_image_codes[index]) > 10:
-                    input_code = np.median(input_image_codes[index], axis=0)
-                    #input_image_codes[index] = (input_image_codes[index] + input_code) / 2
-                    input_image_codes[index] = input_image_codes[index][1:]
-                    #print(input_code)
-                    nombre = str(k_mean.that_class(input_code))
-                (x1, y1), (x2, y2) = face_box
-                cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0))
-                cv2.putText(frame, str(nombre), (x1,y1+10), font, 1,(0,0,255), 2, cv2.LINE_AA)
-        
-        elif len(encode_images) < len(input_image_codes):
-            indices = list(range(len(input_image_codes)))
-            
-            for face_box, code in zip(face_boxes, encode_images):
-                index = np.linalg.norm(media - code, axis=1).argmin()
-                _ = indices.pop(index)
+        if len(faces) == 1:
+            face = faces[0]
+            margin = np.round(face * 0.15).astype('int') * [[-1],[1]]
+            face += margin
+            (x1, y1),(x2, y2) = face
+            if face.min() >= 0:
+                face_img = frame[y1: y2, x1: x2]
+                face_img = img_processor(face_img, margin)
+                face_images.append(face_img)
                 
-            for index in indices:
-                _ = input_image_codes.pop(index)
-                
-        
+            cv2.rectangle(frame, (x1,y1), (x2, y2), (0,255,0))
         else:
-            distances = []
-            for code in encode_images:
-                distance = np.linalg.norm(media - code, axis=1).min()
-                distances.append(distance)
-            index = np.argmax(distances)
-            new_code = encode_images[index].reshape((1, 128))
-            input_image_codes.append(new_code)
+            print("Solo debe haber un rostro en la imagen para el registro.", end='\r')
+        
+        if len(face_images) > 30:
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(
+                img=frame,
+                text="Ya tenemos fotos suficientes para el registro precione 'q'",
+                org=(10,30),
+                fontFace=font,
+                fontScale=0.6,
+                color=(255,0,0),
+                thickness=2
+            )
+            face_images.remove(face_images[0])
+        
+        if done:
+            cv2.imshow('registor', frame)
+            if cv2.waitKey(1) == ord('q'):
+                cv2.destroyAllWindows()
+                identifier.register(id_user, face_images)
+                activo = False
+    cap.release()
 
-        cv2.imshow('CAMARA', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    CAP.release()
-    cv2.destroyAllWindows()
-
-
-def register_camera(id_user, ip = None):
-    """
-    Sirve para registrar a un usuario al cual identificarlo mediante su rostro.
+def identify():
+    activo = cap.open(0)
+    while activo:
+        done, frame = cap.read()
+        scale, frame = img_processor.rescale_img(frame, resolution=720)
+        faces = face_detector(frame)
+        
+        for face in faces:
+            margin = np.round(face * 0.15).astype('int') * [[-1],[1]]
+            face += margin
+            (x1, y1),(x2, y2) = face
+            cv2.rectangle(frame, (x1,y1), (x2, y2), (0,255,0))
+            if face.min() >= 0:
+                face_img = frame[y1: y2, x1: x2]
+                face_img = img_processor(face_img, margin)
+                id_user = identifier.identify([face_img])
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(
+                    img=frame,
+                    text=str(id_user),
+                    org=(x1-10,y1-30),
+                    fontFace=font,
+                    fontScale=0.6,
+                    color=(255,0,0),
+                    thickness=2
+                )
+        cv2.imshow('registor', frame)
+        if cv2.waitKey(1) == ord('q'):
+            cv2.destroyAllWindows()
+            activo = False
+cap.release()
+            
     
-    Args:
-        - id_user: debe ser un número por el cual se identificara
-                   a una persona.
-                   
-        - ip: En el caso de que se use una camara mediante wifi,
-              recibe una entrada de esta forma "http://127.0.0.1"
-              o el ip de su dispositivo.
-    """
-    mjs = "id_user debe ser un número"
-    res = False
-    if ip == None:
-        active = CAP.open(0)
-    else:
-        active = CAP.open(ip+'/video')
-    input_codes = []
-    mjs = 'Preciona "q" para registrar su rostro'
-    print(mjs)
-    
-    while active and id_user.isnumeric():
-        _, frame = CAP.read()
-        frame[:50] = np.array([0, 0, 255])
-        frame[:50, : int(frame.shape[1] * (len(input_codes) / 100))] = np.array([255,0,0])
-        
-        face_boxes, encode_images = identificador.box_and_encode(frame)
-        
-        if len(encode_images) == 1 and len(input_codes) < 100:
-            input_codes.append(encode_images[0])
-            (x1, y1), (x2, y2) = face_boxes[0]
-            cv2.rectangle(frame,(x1,y1),(x2,y2),(0,255,0))
-        
-        elif len(input_codes) >= 100:
-            median = np.median(input_codes, axis=0)
-            input_codes = list( (np.array(input_codes) + median) / 2 )[:99]
-        
-        cv2.imshow('camara', frame)
-        if (cv2.waitKey(1) & 0xFF == ord('q')):
-            k_mean.add_class(id_user, np.array(input_codes))
-            mjs = f'Su registro se completo exitosamente con {id_user}'
-            break
-    print(mjs)
-    CAP.release()
-    cv2.destroyAllWindows()
-    return res
 
 if __name__ == "__main__":
-    camara('http://192.168.1.159:4040')
-    #camara()
-    #register_camera('1234', 'http://192.168.1.159:4040')
+    activo = True
+    print("Bienvenido a este sistema de reconocimiento facial.")
+    while activo:
+        msg  = "Registrar   (r) \n" 
+        msg += "identificar (i) \n" 
+        msg += "salir       (s)\n\n" 
+        msg += "entrada >>>  "
+        entrada = input(msg)
+        if entrada == "r":
+            id_user = input("introduzca un id_user (ej:1234) :")
+            while not id_user.isnumeric():
+                id_user = input("debe de introducir un número (ej:1234) :")
+            register(int(id_user))
+        elif entrada == "i" :
+            print("Presione la tecla 'q' para salir de la camara")
+            identify()
+        elif entrada == "s":
+            activo = False
+            
+            
+        
+    
+    
+        
+    
+
