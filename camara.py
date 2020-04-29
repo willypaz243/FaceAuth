@@ -25,10 +25,14 @@ identifier = Identifier(face_encoder, k_mean, "test_identifier")
 
 cap = cv2.VideoCapture()
 
+device_cam = 1 # dependiendo al numero de camaras que esten conectadas, 0, 1, 2 ...
+
+# Si se usa una camara ip como por ejemplo droidcam app que convierte el movil en una camara web mediante IP
+# device_cam = "http://192.168.1.243:4040/video
+
 def register(id_user):
-    #activo = cap.open("videoplayback.mp4")
     #activo = cap.open("http://192.168.1.243:4040/video")
-    activo = cap.open(0)
+    activo = cap.open(device_cam)
     face_images = []
     while activo:
         done, frame = cap.read()
@@ -71,7 +75,7 @@ def register(id_user):
     cap.release()
 
 def identify():
-    activo = cap.open(0)
+    activo = cap.open(device_cam)
     while activo:
         done, frame = cap.read()
         scale, frame = img_processor.rescale_img(frame, resolution=720)

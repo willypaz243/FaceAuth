@@ -9,4 +9,8 @@ server.py
 manage.py
 model_plot.png
 multimedia
+printModel.py
+ai_server.py
+templates
+manage.py
 

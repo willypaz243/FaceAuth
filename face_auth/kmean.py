@@ -40,7 +40,7 @@ class K_mean():
     def set_centroides(self, centroides):
         self.centroides = centroides
         self.grupos = self.centroides.shape[0]
-        self.set_radios()
+        self.calculate_radios()
 
     def set_id_users(self, ids):
         self.ids = ids
@@ -89,10 +89,10 @@ class K_mean():
                 registered = True
 
             self.save_model()
-        self.set_radios()
+        self.calculate_radios()
         return registered
 
-    def set_radios(self):
+    def calculate_radios(self):
 
         if self.grupos > 1:
             radios = []
@@ -148,7 +148,7 @@ class K_mean():
             self.ids = np.ravel(np.int32(ids))
             self.centroides = database[:,1:]
             self.grupos = self.centroides.shape[0]
-        self.set_radios()
+        self.calculate_radios()
 
         # en caso de usar MongoDB
         

@@ -54,19 +54,38 @@ Para identificar a una persona o registrar a un grupo de personas a las que se q
   los centroides sean la media de los datos mas cercanos a si mismo.
   
   ## Pre-requisitos.
+  
     Para que el programa funcione correctamente debe instalar los paquetes especificados en el requirements.txt
     - En un entorno virtual con python=3.x
-      $ pip install -r requirements.txt
+    ```
+    pip install -r requirements.txt
+    ```
     
     - Sin entorno virtual:
-      $ pip3 install -r requirements.txt
+    ```
+    pip3 install -r requirements.txt
+    ```
   
   ## Lanzar el programa.
-  Para hacer funcionar el programa primero debemos ejecutar el script "manage.py".
-      $ python manage.py
-  Luego abra cualquiera de los archivos HTML en un navegador.
-   - *multiupload_image.html* -> para registrar a un usuario con las fotos de su rostro.
-   - *identify_images* -> para identificar a una persona mediante las fotos de su rostro, le saldra un JSON con su id_user, el id con el que se registro.
-   
-   ## Autor
-    - **Willy Samuel Paz Colque**
+  Para provar el programa ejecute el el script camara.py
+
+  En el entorno virtual con python3.x
+  ```bash
+  python camara.py
+  ```
+  Sin el entorno virtual.
+  ```bash
+  python3 camara.py
+  ```
+  se lanzará una aplicacion de consola con las siguinetes opciones.
+  ```bash
+  Presione la tecla 'q' para salir de la camara
+  Registrar   (r)
+  identificar (i)
+  salir       (s)
+
+  entrada >>>
+  ```
+
+  ## Autor
+    * **Willy Samuel Paz Colque**

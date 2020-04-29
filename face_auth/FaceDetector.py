@@ -2,12 +2,12 @@ import numpy as np
 
 class FaceDetector():
     
-    def __init__(self, predictor):
+    def __init__(self, detectorModel):
         
-        self.__predictor = predictor
+        self.__detectorModel = detectorModel
     
     def detect_face(self, image):
-        faces = self.__predictor(image)
+        faces = self.__detectorModel(image)
         faces = self.__faces_to_numpy(faces)
         return faces
     
