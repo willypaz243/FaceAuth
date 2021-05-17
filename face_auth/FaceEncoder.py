@@ -1,4 +1,3 @@
-from tensorflow import function
 import cv2
 import numpy as np
 
@@ -10,11 +9,11 @@ class FaceEncoder:
     
     def encode(self, face_img_inputs):
         face_img_inputs = self.__normalize_imputs(face_img_inputs)
-        return self.__encode(face_img_inputs).numpy()
+        return self.__encode(face_img_inputs)
     
     def __normalize_imputs(self, face_img_inputs):
         inputs = []
-        input_size = tuple(self.model.input.shape[1:3])
+        input_size = (96, 96)
         for img in face_img_inputs:
             img = cv2.resize(img, input_size)
             img = img / 255
@@ -22,9 +21,10 @@ class FaceEncoder:
             inputs.append(img)
         return np.array(inputs)
     
-    @function
     def __encode(self, inputs):
-        predict = self.model(inputs)
+        inputs = cv2.dnn.blobFromImages(inputs)
+        self.model.setInput(inputs)
+        predict = self.model.forward()
         return predict
     
     def __call__(self, face_img_inputs):

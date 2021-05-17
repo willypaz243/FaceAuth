@@ -5,9 +5,10 @@ import numpy as np
 from face_auth.FaceDetector import FaceDetector
 from face_auth.ImgProcessor import ImgProcessor
 from face_auth.FaceEncoder import FaceEncoder
-from face_auth.face_model import face_model
 from face_auth.kmean import K_mean
 from face_auth.Identifier import Identifier
+
+FREEZE_MODEL_PATH = './frozen_models/frozen_graph.pb'
 
 predictor = dlib.get_frontal_face_detector()
 face_detector = FaceDetector(predictor)
@@ -15,9 +16,8 @@ face_detector = FaceDetector(predictor)
 landmark_detector = dlib.shape_predictor("face_auth/datas/shape_predictor_68_face_landmarks.dat")
 img_processor = ImgProcessor(landmark_detector)
 
-model = face_model()
-model.load_weights("face_auth/models/model.h5")
-face_encoder = FaceEncoder(model)
+net_model = cv2.dnn.readNet(FREEZE_MODEL_PATH)
+face_encoder = FaceEncoder(net_model)
 
 k_mean = K_mean(model_name="testing")
 
@@ -25,7 +25,7 @@ identifier = Identifier(face_encoder, k_mean, "test_identifier")
 
 cap = cv2.VideoCapture()
 
-device_cam = 1 # dependiendo al numero de camaras que esten conectadas, 0, 1, 2 ...
+device_cam = 0 # dependiendo al numero de camaras que esten conectadas, 0, 1, 2 ...
 
 # Si se usa una camara ip como por ejemplo droidcam app que convierte el movil en una camara web mediante IP
 # device_cam = "http://192.168.1.243:4040/video

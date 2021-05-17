@@ -1,7 +1,3 @@
-import numpy as np
-
-from .Identity import Identity
-
 class Identifier:
 
     def __init__(self, face_encoder, k_mean, name = 'identificador'):

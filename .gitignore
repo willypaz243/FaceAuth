@@ -3,14 +3,17 @@ __pycache__
 dataset
 entrenamiento
 images
-nn4.small2.v1.h5
 facenet.png
-server.py
 manage.py
 model_plot.png
 multimedia
 printModel.py
 ai_server.py
-templates
-manage.py
+old_files
+Paper.md
+training
 
+# python scripts
+freeze*
+load_model*
+test_frozen*
