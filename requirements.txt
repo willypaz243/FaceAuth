@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 dlib==19.22.0
 matplotlib==3.4.1
 numpy==1.19.5
 opencv-python==4.5.1.48
+=======
+dlib==19.19.99
+Flask==1.1.1
+matplotlib==3.1.3
+numpy==1.18.1
+opencv-python==4.2.0.32
+>>>>>>> b8e30792c391f13755b11ad6691b005182591cbe
 tensorflow==2.4.0
