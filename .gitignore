@@ -1,5 +1,10 @@
+# enviroment
+env
+# python cache
 __pycache__
+# vscode
 .vscode
+# dataset
 dataset
 entrenamiento
 images

@@ -53,17 +53,13 @@ Para identificar a una persona o registrar a un grupo de personas a las que se q
   que se denominan 'centroides', que se irán moviendo hacia la media de los datos mas cercanos a ellos, este proceso se repite hasta que
   los centroides sean la media de los datos mas cercanos a si mismo.
   
-  ## Pre-requisitos.
+  ## instalar pre-requisitos.
   
     Para que el programa funcione correctamente debe instalar los paquetes especificados en el requirements.txt
-    - En un entorno virtual con python=3.x
+    - En un entorno virtual con python=3.9
     ```
+    pip install -r important_requirements.txt
     pip install -r requirements.txt
-    ```
-    
-    - Sin entorno virtual:
-    ```
-    pip3 install -r requirements.txt
     ```
   
   ## Lanzar el programa.
