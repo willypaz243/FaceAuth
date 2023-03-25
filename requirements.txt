@@ -2,4 +2,4 @@ dlib==19.22.1
 matplotlib==3.4.3
 numpy==1.21.0
 opencv-python==4.5.3.56
-tensorflow==2.6.3
+tensorflow==2.11.1
