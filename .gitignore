@@ -1,24 +1,45 @@
-# enviroment
-env
-# python cache
-__pycache__
-# vscode
-.vscode
-# dataset
-dataset
-entrenamiento
-images
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# uv / virtual env
+.venv/
+uv.lock
+
+# dataset & generated data
+dataset/
+entrenamiento/
+images/
+multimedia/
+
+# model files
+frozen_models/
+face_auth/models/*.h5
+face_auth/weights/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# images / plots
 facenet.png
-manage.py
 model_plot.png
-multimedia
+*.png
+
+# scripts / temp
+manage.py
 printModel.py
 ai_server.py
-old_files
+old_files/
 Paper.md
-training
-
-# python scripts
+training/
+*.pyc
+test_frozen*.py
 freeze*
 load_model*
-test_frozen*

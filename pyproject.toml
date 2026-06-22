@@ -1,0 +1,21 @@
+[project]
+name = "faceauth"
+version = "0.1.0"
+description = "Sistema de autenticación facial en tiempo real basado en FaceNet y K-means clustering"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "dlib==20.0.1",
+    "matplotlib==3.11.0",
+    "numpy==1.26.4",
+    "opencv-python==4.11.0.86",
+    "torch==2.12.1",
+    "torchvision==0.27.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["face_auth*"]
+
+[build-system]
+requires = ["setuptools>=61", "wheel", "cmake"]
+build-backend = "setuptools.build_meta"
